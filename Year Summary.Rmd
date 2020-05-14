@@ -10,9 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r data}
+#loading necessary packages
 library(ggplot2)
 library(tidyr)
 library(dplyr)
+
+#reading in my transaction data for each month as well as adding month as a variable to the data frame
 january <- read.csv("January/january_transactions.csv")
 january <- january%>%mutate(Month = "January")
 february <- read.csv("February/february_transactions.csv")
@@ -22,6 +25,7 @@ march <- march%>%mutate(Month = "March")
 april <- read.csv("April/april_transactions.csv")
 april <- april%>%mutate(Month = "April")
 
+#creating one large data frame
 year <- rbind(january, february, march, april)
 year$Month <- factor(year$Month, levels = c("January", "February", "March", "April"))
 ```
@@ -34,12 +38,15 @@ income <- c("Mom","Paycheck","Reimbursement", "Interest Income", "Stock Dividend
 
 ## Spending Habits
 ```{r expenses}
+#Categorizing transactions as Expense or Income based on what I deemed an expense/income
 year$group <- rep(NA, length(year$Category))
 year$group[year$Category %in% expenses] <-"Expense"
 year$group[year$Category %in% income] <- "Income"
 
+#calculating the total amount of each category
 total_expenses <- year%>%filter(group == "Expense")%>%group_by(Category)%>%summarize(Amount = sum(Amount))
 
+#bar graph displaying total of each category
 total_expenses%>%ggplot(aes(x = Category, y = Amount, fill= Category))+geom_col()+coord_flip()+geom_text(aes(label = Amount))+theme(legend.position = "none")+labs(title = "Spending Breakdown by Category", y = "Amount($)")
 ```
 
@@ -47,6 +54,7 @@ total_expenses%>%ggplot(aes(x = Category, y = Amount, fill= Category))+geom_col(
 ```{r recurring}
 recurring <- total_expenses%>%filter(Category %in% c("Groceries", "School", "Personal", "Emergency", "Food", "Subscriptions", "Stock Purchase", "Sorority", "Healthcare"))
 
+# bar graph of totals of recurring expenses
 recurring%>%ggplot(aes(x = Category, y = Amount, fill= Category))+geom_col()+coord_flip()+geom_text(aes(label = Amount))+theme(legend.position = "none")+labs(title = "Spending Breakdown by Category", subtitle = "Recurring Expenses", y = "Amount($)")
 
 
@@ -55,20 +63,25 @@ recurring%>%ggplot(aes(x = Category, y = Amount, fill= Category))+geom_col()+coo
 ##Spending Per Month
 ```{r avgerages}
 
+#calculate the sums of desired cateogries by month
 sums <- year%>%filter(Category %in% c("Groceries", "School", "Personal", "Emergency", "Zack", "Subscriptions", "Date Night", "Stock Purchase", "Sorority", "Healthcare"))%>%group_by( Category, Month)%>%summarize(Total = sum(Amount))
 
-
+#line graph of grocery spending per month
 sums%>%filter(Category == "Groceries")%>%ggplot(aes(x = Month, y = Total))+geom_point(color ="darkgreen")+geom_line(aes(group = 1), color = "darkgreen")+labs(title = "Grocery Spending", y = "Amount($)")+geom_text(aes(label = Total, y = Total+5))
 
+#line graph of subscription spending per month
 sums%>%filter(Category == "Subscriptions")%>%ggplot(aes(x = Month, y = Total))+geom_point(color ="blue")+geom_line(aes(group = 1),color = "blue")+labs(title = "Subscriptions", y = "Amount($)")+geom_text(aes(label = Total, y = Total+1))
 
+#line graph of personal spending per month
 sums%>%filter(Category %in% c("Personal"))%>%ggplot(aes(x = Month, y =Total))+geom_point(color = "pink")+geom_line(aes(group = 1), color = "pink")+labs(title = "Nonessential Spending Overtime", y = "Amount($)")+geom_text(aes(label = Total, y = Total+5))
 ```
 
 ##Income
 ```{r income}
+#calculating total sums for the income categories
 total_income <- year%>%filter(group == "Income")%>%group_by(Category)%>%summarize(Amount = sum(Amount))
 
+#bar graph of income totals by category
 total_income%>%ggplot(aes(x = Category, y = Amount, fill = Category))+geom_col()+geom_text(aes(label = Amount))+theme(legend.position = "none")+labs(title = "Breakdown of Income", y = "Amount($)")
 ```
 
